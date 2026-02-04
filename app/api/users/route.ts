@@ -27,18 +27,7 @@ export async function POST(request: NextRequest) {
 
     const trimmedName = name.trim();
     
-    // Assign a random funny emoji instead of initials
-    // Assign a random funny emoji instead of initials
-    const emojis = [
-      '☕', '🥐', '🥯', '👨‍🍳', '👩‍🚀', '🦖', '👾', '🤖', '🎃', '👽', 
-      '🤡', '🤠', '👻', '☠️', '🐻', '🐱', '🐶', '🍕', '🍔', '🌮', 
-      '🍩', '🍪', '🦄', '🐲', '🧙‍♂️', '🧛‍♀️', '🧟', '🧞‍♂️', '🧜‍♀️', '🧚',
-      '🥑', '🦦', '🦥', '🐝', '🐙', '🐸', '🐢', '🦀', '🦞', '🦁',
-      '🐯', '🦉', '🐧', '🦆', '🦅', '🐗', '🦍', '🐘', '🦛', '🦏',
-      '🐪', '🦒', '🦘', '🦬', '🐖', '🐏', '🦙', '🐐', '🦌', '🐕',
-      '🐩', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊️', '🐇'
-    ];
-    const initials = emojis[Math.floor(Math.random() * emojis.length)];
+    const initials = generateInitials(trimmedName);
     
     const color = generateColor(trimmedName);
 

@@ -1,7 +1,6 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
 import ThemeToggle from './components/ThemeToggle';
 
@@ -134,13 +133,16 @@ export default function Home() {
 // ============================================
 // Stats Area
 // ============================================
+import CalendarHeatmap from 'react-calendar-heatmap';
+import StatsChart from './components/StatsChart';
+
 interface StatsAreaProps {
   stats: Stats | null;
   dailyStats: DailyStats | null;
 }
 
 function StatsArea({ stats, dailyStats }: StatsAreaProps) {
-  const [viewMode, setViewMode] = useState<'histogram' | 'heatmap'>('histogram');
+  const [viewMode, setViewMode] = useState<'chart' | 'heatmap'>('chart');
 
   return (
     <section className="dashboard-section stats-section">
@@ -163,24 +165,40 @@ function StatsArea({ stats, dailyStats }: StatsAreaProps) {
       </div>
 
       {/* View Toggle */}
-      <div className="view-toggle">
+      <div className="view-toggle" style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '10px' }}>
         <button
-          className={`toggle-btn ${viewMode === 'histogram' ? 'active' : ''}`}
-          onClick={() => setViewMode('histogram')}
+          className={`toggle-btn ${viewMode === 'chart' ? 'active' : ''}`}
+          onClick={() => setViewMode('chart')}
+          style={{ 
+             background: 'none', 
+             border: 'none', 
+             cursor: 'pointer', 
+             opacity: viewMode === 'chart' ? 1 : 0.5,
+             fontSize: '1.2rem'
+          }}
+          title="Line Chart"
         >
-          📊
+          📈
         </button>
         <button
           className={`toggle-btn ${viewMode === 'heatmap' ? 'active' : ''}`}
           onClick={() => setViewMode('heatmap')}
+          style={{ 
+             background: 'none', 
+             border: 'none', 
+             cursor: 'pointer', 
+             opacity: viewMode === 'heatmap' ? 1 : 0.5,
+             fontSize: '1.2rem',
+             marginLeft: '8px'
+          }}
+          title="Heatmap"
         >
           📅
         </button>
       </div>
 
-      {/* Visualization */}
-      {viewMode === 'histogram' ? (
-        <Histogram data={dailyStats?.daily || []} />
+      {viewMode === 'chart' ? (
+        <StatsChart data={dailyStats?.daily || []} />
       ) : (
         <Heatmap data={dailyStats?.daily || []} />
       )}
@@ -189,45 +207,7 @@ function StatsArea({ stats, dailyStats }: StatsAreaProps) {
 }
 
 // ============================================
-// Histogram Component
-// ============================================
-interface HistogramProps {
-  data: Array<{ date: string; cups: number }>;
-}
-
-function Histogram({ data }: HistogramProps) {
-  // Show last 14 days
-  const recentData = data.slice(-14);
-  const maxCups = Math.max(...recentData.map(d => d.cups), 1);
-
-  return (
-    <div className="histogram">
-      <div className="histogram-bars">
-        {recentData.map((item, idx) => {
-          const height = (item.cups / maxCups) * 100;
-          const date = new Date(item.date);
-          const dayLabel = date.toLocaleDateString('en', { weekday: 'short' }).charAt(0);
-          
-          return (
-            <div key={idx} className="histogram-bar-wrapper">
-              <div 
-                className="histogram-bar" 
-                style={{ height: `${Math.max(height, 4)}%` }}
-                title={`${item.date}: ${item.cups} cups`}
-              >
-                {item.cups > 0 && <span className="bar-value">{item.cups}</span>}
-              </div>
-              <span className="bar-label">{dayLabel}</span>
-            </div>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
-
-// ============================================
-// Heatmap Component (react-calendar-heatmap)
+// Heatmap Component
 // ============================================
 interface HeatmapProps {
   data: Array<{ date: string; cups: number }>;
@@ -275,9 +255,12 @@ function Heatmap({ data }: HeatmapProps) {
   );
 }
 
-// ============================================
-// Recording Area
-// ============================================
+// ... (RecordingArea)
+
+// ... (ManageArea modifications below)
+
+
+// RecordingArea
 interface RecordingAreaProps {
   users: User[];
   beans: CoffeeBean[];
@@ -291,11 +274,18 @@ function RecordingArea({ users, beans, onRecordSuccess }: RecordingAreaProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const toggleUser = (userId: number) => {
-    setSelectedUserIds(prev =>
-      prev.includes(userId)
+    setSelectedUserIds(prev => {
+      const newSelection = prev.includes(userId)
         ? prev.filter(id => id !== userId)
-        : [...prev, userId]
-    );
+        : [...prev, userId];
+      
+      // Auto-update cups based on selection count, but only if selection is non-empty
+      if (newSelection.length > 0) {
+        setCups(newSelection.length);
+      }
+      
+      return newSelection;
+    });
   };
 
   const handleSubmit = async () => {
@@ -334,11 +324,13 @@ function RecordingArea({ users, beans, onRecordSuccess }: RecordingAreaProps) {
     <section className="dashboard-section recording-section">
       {/* People Selection - First is maker, rest are drinkers */}
       <div className="selection-group">
-        <div className="selection-label">👥 People <span className="label-hint">(1st = maker 👨‍🍳)</span></div>
+        <div className="selection-label">👥 People <span className="label-hint">(1st = maker)</span></div>
         <div className="chips-grid">
           {users.map((user) => {
             const isSelected = selectedUserIds.includes(user.id);
             const isMaker = selectedUserIds[0] === user.id;
+            // Show emoji only when selected. Maker gets chef, others get cup (or nothing, request said "drinking emoji") on name
+            
             return (
               <button
                 key={user.id}
@@ -349,9 +341,15 @@ function RecordingArea({ users, beans, onRecordSuccess }: RecordingAreaProps) {
                   backgroundColor: isSelected ? `${user.color}15` : undefined,
                 }}
               >
-                {isMaker && <span className="maker-badge">👨‍🍳</span>}
-                <span className="chip-avatar" style={{ backgroundColor: user.color }}>{user.initials}</span>
-                <span className="chip-text">{user.name}</span>
+                {/* Name logic: Emoji + Text */}
+                <span className="chip-text">
+                  {isSelected && (
+                    <span style={{ marginRight: '6px' }}>
+                      {isMaker ? '👨‍🍳' : '☕'}
+                    </span>
+                  )}
+                  {user.name}
+                </span>
               </button>
             );
           })}
@@ -426,31 +424,33 @@ function ManageArea({ users, beans, records, onRefresh }: ManageAreaProps) {
   const [modalType, setModalType] = useState<'user' | 'bean'>('user');
   const [editingItem, setEditingItem] = useState<User | CoffeeBean | null>(null);
 
-  const handleDeleteRecord = async (id: number) => {
-    if (!confirm('Delete this record?')) return;
-    try {
-      await fetch(`/api/drinking?id=${id}`, { method: 'DELETE' });
-      onRefresh();
-    } catch (error) {
-      console.error('Error deleting:', error);
-    }
+  // ... inside ManageArea ...
+  const [deleteRequest, setDeleteRequest] = useState<{ type: 'record' | 'user' | 'bean'; id: number; name?: string } | null>(null);
+
+  const handleDeleteRecord = (id: number) => {
+    setDeleteRequest({ type: 'record', id });
   };
 
-  const handleDeleteUser = async (id: number) => {
-    if (!confirm('Delete this user?')) return;
-    try {
-      await fetch(`/api/users?id=${id}`, { method: 'DELETE' });
-      onRefresh();
-    } catch (error) {
-      console.error('Error deleting:', error);
-    }
+  const handleDeleteUser = (user: User) => {
+    setDeleteRequest({ type: 'user', id: user.id, name: user.name });
   };
 
-  const handleDeleteBean = async (id: number) => {
-    if (!confirm('Delete this bean?')) return;
+  const handleDeleteBean = (bean: CoffeeBean) => {
+    setDeleteRequest({ type: 'bean', id: bean.id, name: bean.name });
+  };
+
+  const executeDelete = async () => {
+    if (!deleteRequest) return;
+
     try {
-      await fetch(`/api/beans?id=${id}`, { method: 'DELETE' });
+      let endpoint = '';
+      if (deleteRequest.type === 'record') endpoint = `/api/drinking?id=${deleteRequest.id}`;
+      if (deleteRequest.type === 'user') endpoint = `/api/users?id=${deleteRequest.id}`;
+      if (deleteRequest.type === 'bean') endpoint = `/api/beans?id=${deleteRequest.id}`;
+
+      await fetch(endpoint, { method: 'DELETE' });
       onRefresh();
+      setDeleteRequest(null);
     } catch (error) {
       console.error('Error deleting:', error);
     }
@@ -470,6 +470,8 @@ function ManageArea({ users, beans, records, onRefresh }: ManageAreaProps) {
 
   return (
     <section className="dashboard-section manage-section">
+      {/* ... Accordions ... */}
+      
       {/* Records Accordion */}
       <div className="accordion-item">
         <button
@@ -488,17 +490,33 @@ function ManageArea({ users, beans, records, onRefresh }: ManageAreaProps) {
               <div className="compact-list">
                 {records.map((record) => (
                   <div key={record.id} className="compact-record">
-                    <div className="record-cups-badge">{record.cups}☕</div>
-                    <div className="record-details">
-                      <span className="record-bean">{record.beanName || 'No beans'}</span>
-                      {record.drinkers.length > 0 && (
-                        <span className="record-drinkers">
-                          {record.drinkers.map(d => d.initials).join(', ')}
-                        </span>
-                      )}
-                    </div>
-                    <span className="record-time">{formatRelativeTime(record.recordedAt)}</span>
-                    <button className="btn-icon" onClick={() => handleDeleteRecord(record.id)}>🗑️</button>
+                    {/* Simplified Order: Beans, Cups, Chef */}
+                    <span className="record-bean" style={{ flex: 1, fontWeight: 500 }}>{record.beanName || 'No beans'}</span>
+                    
+                    <div className="record-cups-badge" style={{ margin: '0 8px' }}>{record.cups}☕</div>
+                    
+                    {record.makerInitials && (
+                       <span 
+                         className="record-maker" 
+                         title={`Maker: ${record.makerName}`}
+                         style={{ 
+                           display: 'inline-flex',
+                           alignItems: 'center',
+                           gap: '4px',
+                           padding: '2px 8px',
+                           borderRadius: '12px',
+                           fontSize: '0.8rem',
+                           fontWeight: 500,
+                           color: 'var(--color-text-secondary)',
+                           backgroundColor: 'var(--color-bg-tertiary)',
+                           border: '1px solid var(--color-border)',
+                         }}
+                       >
+                         <span>👨‍🍳</span> {record.makerInitials}
+                       </span>
+                    )}
+                    
+                    <button className="btn-icon" onClick={() => handleDeleteRecord(record.id)} style={{ marginLeft: '8px', opacity: 0.5 }}>🗑️</button>
                   </div>
                 ))}
               </div>
@@ -526,7 +544,7 @@ function ManageArea({ users, beans, records, onRefresh }: ManageAreaProps) {
                   <span className="mini-avatar" style={{ backgroundColor: user.color }}>{user.initials}</span>
                   <span className="entity-name">{user.name}</span>
                   <button className="btn-icon" onClick={() => openEditModal('user', user)}>✏️</button>
-                  <button className="btn-icon" onClick={() => handleDeleteUser(user.id)}>🗑️</button>
+                  <button className="btn-icon" onClick={() => handleDeleteUser(user)}>🗑️</button>
                 </div>
               ))}
             </div>
@@ -554,7 +572,7 @@ function ManageArea({ users, beans, records, onRefresh }: ManageAreaProps) {
                   <span className="entity-name">{bean.name}</span>
                   <span className="entity-meta">{bean.origin || ''}</span>
                   <button className="btn-icon" onClick={() => openEditModal('bean', bean)}>✏️</button>
-                  <button className="btn-icon" onClick={() => handleDeleteBean(bean.id)}>🗑️</button>
+                  <button className="btn-icon" onClick={() => handleDeleteBean(bean)}>🗑️</button>
                 </div>
               ))}
             </div>
@@ -562,7 +580,7 @@ function ManageArea({ users, beans, records, onRefresh }: ManageAreaProps) {
         )}
       </div>
 
-      {/* Modal */}
+      {/* Edit/Add Modal */}
       {showModal && (
         <Modal
           title={modalType === 'user' 
@@ -586,6 +604,42 @@ function ManageArea({ users, beans, records, onRefresh }: ManageAreaProps) {
           )}
         </Modal>
       )}
+
+      {/* Delete Confirmation Modal */}
+      {deleteRequest && (
+        <Modal
+          title="Confirm Delete"
+          onClose={() => setDeleteRequest(null)}
+        >
+          <div className="confirmation-content">
+            <p>
+              Are you sure you want to delete this {deleteRequest.type}
+              {deleteRequest.name ? <strong> "{deleteRequest.name}"</strong> : ''}?
+            </p>
+            <p className="confirmation-warning" style={{ color: 'var(--color-error)', fontSize: '0.9em', marginTop: '10px' }}>
+              This action cannot be undone.
+            </p>
+            <div className="modal-footer" style={{ padding: 0, border: 'none', marginTop: '20px' }}>
+              <button 
+                type="button" 
+                className="btn btn-secondary" 
+                onClick={() => setDeleteRequest(null)}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn btn-danger"
+                style={{ backgroundColor: 'var(--color-error)', color: 'white' }}
+                onClick={executeDelete}
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
     </section>
   );
 }
