@@ -1,0 +1,17 @@
+version: '3'
+
+services:
+  espresso:
+    container_name: espresso-app
+    build: .
+    image: espresso:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - espresso_data:/app/data
+    restart: always
+    environment:
+      - DATABASE_URL=file:/app/data/espresso.db
+
+volumes:
+  espresso_data:

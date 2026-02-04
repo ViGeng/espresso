@@ -1,0 +1,16 @@
+import Database from 'better-sqlite3';
+import { drizzle } from 'drizzle-orm/better-sqlite3';
+import fs from 'fs';
+import path from 'path';
+import * as schema from './schema';
+
+// Ensure data directory exists
+const dataDir = path.join(process.cwd(), 'data');
+if (!fs.existsSync(dataDir)) {
+  fs.mkdirSync(dataDir, { recursive: true });
+}
+
+const sqlite = new Database(path.join(dataDir, 'espresso.db'));
+export const db = drizzle(sqlite, { schema });
+
+export { schema };
