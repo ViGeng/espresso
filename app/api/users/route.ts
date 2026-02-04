@@ -1,5 +1,5 @@
 import { db } from '@/lib/db';
-import { users } from '@/lib/db/schema';
+import { coffeeDrinking, users } from '@/lib/db/schema';
 import { generateColor, generateInitials } from '@/lib/utils';
 import { eq } from 'drizzle-orm';
 import { NextRequest, NextResponse } from 'next/server';
@@ -26,7 +26,20 @@ export async function POST(request: NextRequest) {
     }
 
     const trimmedName = name.trim();
-    const initials = generateInitials(trimmedName);
+    
+    // Assign a random funny emoji instead of initials
+    // Assign a random funny emoji instead of initials
+    const emojis = [
+      '☕', '🥐', '🥯', '👨‍🍳', '👩‍🚀', '🦖', '👾', '🤖', '🎃', '👽', 
+      '🤡', '🤠', '👻', '☠️', '🐻', '🐱', '🐶', '🍕', '🍔', '🌮', 
+      '🍩', '🍪', '🦄', '🐲', '🧙‍♂️', '🧛‍♀️', '🧟', '🧞‍♂️', '🧜‍♀️', '🧚',
+      '🥑', '🦦', '🦥', '🐝', '🐙', '🐸', '🐢', '🦀', '🦞', '🦁',
+      '🐯', '🦉', '🐧', '🦆', '🦅', '🐗', '🦍', '🐘', '🦛', '🦏',
+      '🐪', '🦒', '🦘', '🦬', '🐖', '🐏', '🦙', '🐐', '🦌', '🐕',
+      '🐩', '🐈', '🐓', '🦃', '🦚', '🦜', '🦢', '🦩', '🕊️', '🐇'
+    ];
+    const initials = emojis[Math.floor(Math.random() * emojis.length)];
+    
     const color = generateColor(trimmedName);
 
     const result = await db.insert(users).values({
@@ -84,7 +97,14 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'ID is required' }, { status: 400 });
     }
 
-    const result = await db.delete(users).where(eq(users.id, parseInt(id))).returning();
+    const userId = parseInt(id);
+    
+    // Unlink user from drinking records (set makerId to null)
+    await db.update(coffeeDrinking)
+      .set({ makerId: null })
+      .where(eq(coffeeDrinking.makerId, userId));
+
+    const result = await db.delete(users).where(eq(users.id, userId)).returning();
 
     if (result.length === 0) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });

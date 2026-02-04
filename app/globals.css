@@ -12,6 +12,7 @@
 
   /* Accent Colors */
   --color-accent: #c4a77d;
+  --color-accent-rgb: 196, 167, 125;
   --color-accent-hover: #d4b78d;
   --color-accent-subtle: rgba(196, 167, 125, 0.15);
 
@@ -52,14 +53,14 @@
 
   /* Typography */
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --font-size-xs: 0.75rem;
-  --font-size-sm: 0.875rem;
-  --font-size-base: 1rem;
-  --font-size-lg: 1.125rem;
-  --font-size-xl: 1.25rem;
-  --font-size-2xl: 1.5rem;
-  --font-size-3xl: 2rem;
-  --font-size-4xl: 2.5rem;
+  --font-size-xs: 0.875rem;
+  --font-size-sm: 1rem;
+  --font-size-base: 1.125rem;
+  --font-size-lg: 1.25rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 1.875rem;
+  --font-size-3xl: 2.25rem;
+  --font-size-4xl: 3rem;
 
   /* Transitions */
   --transition-fast: 150ms ease;
@@ -68,6 +69,36 @@
 
   /* Touch target size */
   --touch-target: 48px;
+}
+
+/* Light Theme Overrides */
+[data-theme='light'] {
+  /* Colors - Light Mode Primary */
+  --color-bg-primary: #ffffff;
+  --color-bg-secondary: #f8f8f8;
+  --color-bg-tertiary: #eeeeee;
+  --color-bg-elevated: #e6e6e6;
+
+  /* Accent Colors - Slightly darker for contrast on white */
+  --color-accent: #a3865d;
+  --color-accent-rgb: 163, 134, 93;
+  --color-accent-hover: #b89a6f;
+  --color-accent-subtle: rgba(163, 134, 93, 0.15);
+
+  /* Text Colors */
+  --color-text-primary: #1a1a1a;
+  --color-text-secondary: #666666;
+  --color-text-muted: #999999;
+
+  /* Borders */
+  --color-border: #e0e0e0;
+  --color-border-subtle: #f0f0f0;
+
+  /* Shadows - More subtle for light mode */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+  --shadow-glow: 0 0 15px rgba(163, 134, 93, 0.2);
 }
 
 /* ============================================
@@ -83,7 +114,7 @@
 }
 
 html {
-  font-size: 16px;
+  font-size: 18px;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -978,15 +1009,15 @@ body {
 }
 
 .react-calendar-heatmap .color-scale-1 {
-  fill: rgba(196, 167, 125, 0.25);
+  fill: rgba(var(--color-accent-rgb), 0.25);
 }
 
 .react-calendar-heatmap .color-scale-2 {
-  fill: rgba(196, 167, 125, 0.5);
+  fill: rgba(var(--color-accent-rgb), 0.5);
 }
 
 .react-calendar-heatmap .color-scale-3 {
-  fill: rgba(196, 167, 125, 0.75);
+  fill: rgba(var(--color-accent-rgb), 0.75);
 }
 
 .react-calendar-heatmap .color-scale-4 {
@@ -1125,11 +1156,17 @@ body {
   font-size: 12px;
 }
 
-.chip-dot {
-  width: 8px;
-  height: 8px;
+.chip-avatar {
+  width: 20px;
+  height: 20px;
   border-radius: var(--radius-full);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  color: #fff;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
 .chip-text {

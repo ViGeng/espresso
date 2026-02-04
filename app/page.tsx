@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import CalendarHeatmap from 'react-calendar-heatmap';
 import 'react-calendar-heatmap/dist/styles.css';
+import ThemeToggle from './components/ThemeToggle';
 
 // Types
 interface User {
@@ -95,6 +96,7 @@ export default function Home() {
           <span className="logo-icon">☕</span>
           <span>Espresso</span>
         </div>
+        <ThemeToggle />
       </header>
 
       {/* 3-Area Dashboard */}
@@ -348,7 +350,7 @@ function RecordingArea({ users, beans, onRecordSuccess }: RecordingAreaProps) {
                 }}
               >
                 {isMaker && <span className="maker-badge">👨‍🍳</span>}
-                <span className="chip-dot" style={{ backgroundColor: user.color }} />
+                <span className="chip-avatar" style={{ backgroundColor: user.color }}>{user.initials}</span>
                 <span className="chip-text">{user.name}</span>
               </button>
             );
